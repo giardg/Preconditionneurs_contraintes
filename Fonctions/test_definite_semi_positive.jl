@@ -3,7 +3,6 @@
 # The goal of this code is to know is the matrix N intervening in the saddle point matrix
 # [M A'; A -N] is semi-definite positive or not.
 
-
 # Theorical explanation :
 
 # All Hermitian matrices are diagonalizable (Spectral theorem). An Hermitian matrix is positive 
