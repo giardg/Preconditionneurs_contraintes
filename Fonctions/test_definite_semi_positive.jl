@@ -8,7 +8,8 @@
 # All Hermitian matrices are diagonalizable (Spectral theorem). An Hermitian matrix is positive 
 # semi-definite iff its eigenvalues are greater or equal to 0. So, in order to know if Hermitian 
 # matrix is positive semi-definite, it is sufficient to look at whether its eigenvalues are 
-# positive or zero thanks to Julia's function eigvals().
+# positive or zero thanks to Julia's functions eigvals() (for dense matrices) and eigen() (for 
+# sparse matrices).
 
 # Libraries :
 
