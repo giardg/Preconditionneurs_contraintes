@@ -3,22 +3,35 @@ using LinearAlgebra
 using LinearOperators
 using LimitedLDLFactorizations, IncompleteLU, ILUZero
 
-function constrPrecond(M,A)
+function blocMPrecond(M)
+
+    #Preconditionneur avec bloc G diagonal
+    G = (Diagonal(M))
+    return G
+end
+
+function constrPrecond(G,A)
 
     #Fonction qui construit P⁻¹ pour un bloc G = diag(M)
 
     m, n = size(A)
-    G = Diagonal(M)
-    G⁻¹ = inv(G)
-    F1 = A*G⁻¹*(A')
-    #y = zeros(m,1);
-    #Aᵀ⁺GA⁺ = LinearOperator(Float64, n, n, true, true, u -> F1\u) 
+    G⁻¹ = jacobi(G)
+    F2 = (A*G⁻¹*(A')) #Possibilite de faire des factorisation incomplete
+    Aᵀ⁺GA⁺ = LinearOperator(Float64, m, m, true, true, u -> F2\u) 
 
-    opM = [I (-G⁻¹*(A')); zeros(m,n) I]*[G⁻¹ zeros(n,m); zeros(m,n) (-inv(F1))]*[I zeros(n,m);-A*G⁻¹ I] #a modifier bien sur pour ne pas avoir inv() et utilisé les LinearOperators
-
-    #P = [G A'; A zeros(m,m)]
+    opM = LinearOperator(Float64, n+m, n+m, true, true, u -> [(G⁻¹-G⁻¹*A'*Aᵀ⁺GA⁺*A*G⁻¹)*u[1:n] + G⁻¹*A'*Aᵀ⁺GA⁺*u[n+1:m+n]; Aᵀ⁺GA⁺*A*G⁻¹*u[1:n]-Aᵀ⁺GA⁺*u[n+1:m+n]]) 
 
     return opM
 
 
+end
+
+function jacobi(A)
+    n = size(A, 1)
+    J = zeros(n)
+    for i = 1 : n
+        J[i] = (A[i,i] == 0) ? 1.0 : 1 / A[i,i]
+    end
+    P⁻¹ = Diagonal(J)
+    return P⁻¹
 end

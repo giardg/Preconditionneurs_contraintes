@@ -1,4 +1,5 @@
 using Krylov
+using SparseArrays
 include("constrPrecond.jl")
 
 A = rand(90,120)
@@ -10,16 +11,14 @@ m,n = size(A)
 mat = [M A'; A zeros(m,m)]
 b = rand(m+n)
 
-opM = constrPrecond(M,A)
+G = blocMPrecond(M)
+opM = constrPrecond(G,A)
 
-println(typeof(mat))
 x, stats = dqgmres(mat, b)
 nbiter = length(stats.residuals) - 1
 println("Convergence en $nbiter itérations sans préconditionneur.")
 
-mat2 = opM*mat
-b2 = opM*b
-x2, stats = dqgmres(mat2, b2)
+x2, stats = dqgmres(mat, b, M = opM)
 nbiter = length(stats.residuals) - 1
 println("Convergence en $nbiter itérations avec préconditionneur.")
 
