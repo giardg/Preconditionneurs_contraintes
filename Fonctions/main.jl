@@ -11,8 +11,8 @@ m,n = size(A)
 mat = [M A'; A zeros(m,m)]
 b = rand(m+n)
 
-G = blocMPrecond(M)
-opM = constrPrecond(G,A)
+G⁻¹ = blocGJacobi(M)
+opM = constrPrecond(G⁻¹,A)
 
 x, stats = dqgmres(mat, b)
 nbiter = length(stats.residuals) - 1

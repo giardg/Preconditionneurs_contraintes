@@ -3,19 +3,18 @@ using LinearAlgebra
 using LinearOperators
 using LimitedLDLFactorizations, IncompleteLU, ILUZero
 
-function blocMPrecond(M)
+function blocGJacobi(M)
 
-    #Preconditionneur avec bloc G diagonal
-    G = (Diagonal(M))
-    return G
+    #Preconditionneur avec bloc G diagonal   
+    G⁻¹ = jacobi(M)
+    return G⁻¹
 end
 
-function constrPrecond(G,A)
+function constrPrecond(G⁻¹,A)
 
     #Fonction qui construit P⁻¹ pour un bloc G = diag(M)
 
     m, n = size(A)
-    G⁻¹ = jacobi(G)
     F2 = (A*G⁻¹*(A')) #Possibilite de faire des factorisation incomplete
     Aᵀ⁺GA⁺ = LinearOperator(Float64, m, m, true, true, u -> F2\u) 
 
