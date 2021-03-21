@@ -2,6 +2,7 @@ using SparseArrays
 using Plots
 include("FonctionsConstraintPrecond.jl")
 
+#Test sur des systemes randoms pour commencer
 A = sprand(90,120,0.1)
 N = sprand(90,90,0.0) #N = 0 souvent, mais pas nécessaire
 M = sprand(120,120,0.1)
