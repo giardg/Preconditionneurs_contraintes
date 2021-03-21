@@ -3,7 +3,7 @@ using LinearOperators
 using Krylov
 
 ## Fonctions qui créent différents types de G⁻¹ à partir de M
-function blocGJacobi(M)
+function blocGJacobi(M::AbstractArray)
 
     #Preconditionneur avec bloc G diagonal   
     G⁻¹ = jacobi(M)
@@ -24,7 +24,7 @@ function jacobi(A)
 end
 
 ## Fonctions qui construit le préconditionneur
-function constrPrecond(G⁻¹,A,N)
+function constrPrecond(G⁻¹::AbstractArray,A::AbstractArray,N::AbstractArray)
 
     #Calcul du complément de Schur et la méthodologie de son inversion
     m, n = size(A)
@@ -38,7 +38,7 @@ function constrPrecond(G⁻¹,A,N)
 end
 
 ## Fonction qui résout le systeme global avec un préconditionneur par contrainte et une méthode donnée en entrée
-function solvePrecond(M,A,N,methodKrylov="cgs", formG="Diagonal", maxit = 1000)
+function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,methodKrylov="cgs", formG="Diagonal", maxit = 1000)
 
     #Construction de G⁻¹ du préconditionneur
     if formG == "Diagonal"
