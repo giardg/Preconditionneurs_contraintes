@@ -23,7 +23,7 @@ function jacobi(A)
     return P⁻¹
 end
 
-## Fonctions qui construit le préconditionneur
+## Fonction qui construit le préconditionneur à gauche ou à droite
 function constrPrecond(G⁻¹::AbstractArray,A::AbstractArray,N::AbstractArray)
 
     #Calcul du complément de Schur et la méthodologie de son inversion
