@@ -28,7 +28,7 @@ function constrPrecond(G⁻¹,A,N)
 
     #Calcul du complément de Schur et la méthodologie de son inversion
     m, n = size(A)
-    F2 = Hermitian(N+A*G⁻¹*(A')) #Possibilite de faire des factorisations
+    F2 = Hermitian(N+A*G⁻¹*(A')) #Possibilite de faire des factorisations ici
     Schur_inv = LinearOperator(Float64, m, m, true, true, u -> F2\u) 
 
     opM = LinearOperator(Float64, n+m, n+m, true, true, u -> [(G⁻¹-G⁻¹*A'*Schur_inv*A*G⁻¹)*u[1:n] + G⁻¹*A'*Schur_inv*u[n+1:m+n]; Schur_inv*A*G⁻¹*u[1:n]-Schur_inv*u[n+1:m+n]]) 
@@ -38,7 +38,7 @@ function constrPrecond(G⁻¹,A,N)
 end
 
 ## Fonction qui résout le systeme global avec un préconditionneur par contrainte et une méthode donnée en entrée
-function solvePrecond(M,A,N,methodKrylov="cgs", formG="Diagonal")
+function solvePrecond(M,A,N,methodKrylov="cgs", formG="Diagonal", maxit = 1000)
 
     #Construction de G⁻¹ du préconditionneur
     if formG == "Diagonal"
@@ -54,23 +54,23 @@ function solvePrecond(M,A,N,methodKrylov="cgs", formG="Diagonal")
 
     #Différentes méthodes de Krylov possibles
     if methodKrylov == "cgs"
-        x, stats = cgs(mat, b, itmax = 1000)
-        x2, stats2 = cgs(mat, b, M = opM, itmax = 1000)
+        x, stats = cgs(mat, b, rtol=0.0, atol=0.0, itmax=maxit)
+        x2, stats2 = cgs(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit)
     elseif methodKrylov == "gmres"
-        x, stats = dqgmres(mat, b, itmax = 1000)
-        x2, stats2 = dqgmres(mat, b, M = opM, itmax = 1000)
+        x, stats = dqgmres(mat, b, rtol=0.0, atol=0.0, itmax=maxit)
+        x2, stats2 = dqgmres(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit)
     else
         error("Cette méthode de Krylov n'est pas supportée")
     end
 
-    nbiter = length(stats.residuals) - 1
-    println("Convergence en $nbiter itérations sans préconditionneur.")
-    nbiter2 = length(stats2.residuals) - 1
-    println("Convergence en $nbiter2 itérations sans préconditionneur.")
+    #nbiter = length(stats.residuals) - 1
+    #println("Convergence en $nbiter itérations sans préconditionneur.")
+    #nbiter2 = length(stats2.residuals) - 1
+    #println("Convergence en $nbiter2 itérations sans préconditionneur.")
 
-    println("Residu du vecteur [x,y] du système par blocs sans préconditionneur: ", norm(mat*x-b))
-    println("Residu du vecteur [x,y] du système par blocs avec préconditionneur: ", norm(mat*x2-b))
+    #println("Residu du vecteur [x,y] du système par blocs sans préconditionneur: ", norm(mat*x-b))
+    #println("Residu du vecteur [x,y] du système par blocs avec préconditionneur: ", norm(mat*x2-b))
 
-    return x2, stats2
+    return x, stats, x2, stats2
 
 end
