@@ -17,7 +17,7 @@ mat = [M A'; A -N]
 res1 = zeros(100)
 res2 = zeros(100)
 for k = 1:100
-    x, stats, x2, stats2 = solvePrecond(M,A,N,b, "gmres", "Diagonal", k);
+    x, stats, x2, stats2 = solvePrecond(M,A,N,b, "gmres", "LLDL", k);
     res1[k] = norm(b-mat*x)
     res2[k] = norm(b-mat*x2)
 end
