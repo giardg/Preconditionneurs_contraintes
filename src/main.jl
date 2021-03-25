@@ -1,11 +1,12 @@
 using SparseArrays
 using Plots
+using LaTeXStrings
 include("FonctionsConstraintPrecond.jl")
 
 #Test sur des systemes randoms pour commencer
-A = sprand(90,120,0.3)
-N = sprand(90,90,0.0) #N = 0 souvent, mais pas nécessaire
-M = sprand(120,120,0.3)
+A = sprand(90,120,1.0)
+N = sprand(90,90,0.3) #N = 0 souvent, mais pas nécessaire
+M = sprand(120,120,1.0)
 M = M'*M #M = M'*M pour hermitien, mais pas nécessaire (pour gmres oui)
 N = N'*N;
 
@@ -17,10 +18,10 @@ mat = [M A'; A -N]
 res1 = zeros(100)
 res2 = zeros(100)
 for k = 1:100
-    x, stats, x2, stats2 = solvePrecond(M,A,N,b, "gmres", "LLDL", k);
+    x, stats, x2, stats2 = solvePrecond(M,A,N,b, "gmres", "I", k);
     res1[k] = norm(b-mat*x)
     res2[k] = norm(b-mat*x2)
 end
 
-plot(1:100, res1, yaxis=:log10, xlabel="k", color=4, ylabel="|r_k|", label="Sans préconditionneur")
-plot!(1:100, res2, yaxis=:log10, xlabel="k", color=5, ylabel="|r_k|", label="Avec préconditionneur")
+plot(1:100, res1, yaxis=:log10, xlabel="k", color=4, ylabel=L"\|r_k\|", label="Sans préconditionneur")
+plot!(1:100, res2, yaxis=:log10, xlabel="k", color=5, ylabel=L"\|r_k\|", label="Avec préconditionneur")

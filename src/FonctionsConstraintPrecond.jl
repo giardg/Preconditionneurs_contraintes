@@ -55,6 +55,9 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,metho
 
     elseif formG == "LLDL"
         G⁻¹ = lim_LDL(M)
+
+    elseif formG == "I"
+        G⁻¹ = LinearOperator(Float64, size(M,1), size(M,1), true, true, v -> v) 
     else
         error("Cette forme de G n'est pas supportée")
     end
