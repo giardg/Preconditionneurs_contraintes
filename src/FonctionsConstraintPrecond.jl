@@ -13,7 +13,7 @@ end
 
 function lim_LDL(A)
     n = size(A, 1)
-    F = lldl(A, memory=1)
+    F = lldl(A, memory=10)
     F.D = abs.(F.D);
     G⁻¹ =  LinearOperator(Float64, n, n, true, true, v -> F \ v) 
 end
@@ -47,45 +47,42 @@ function constrPrecond(G⁻¹,A::AbstractArray,N::AbstractArray)
 end
 
 ## Fonction qui résout le systeme global avec un préconditionneur par contrainte et une méthode donnée en entrée
-function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,methodKrylov="cgs", formG="Diagonal", maxit = 1000)
+function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,methodKrylov="cgs", precond = true, formG="Diagonal", maxit = 1000)
 
-    #Construction de G⁻¹ du préconditionneur
-    if formG == "Diagonal"
-        G⁻¹ = blocGJacobi(M)
+    m,n = size(A)
+    
+    if precond
+        #Construction de G⁻¹ du préconditionneur
+        if formG == "Diagonal"
+            G⁻¹ = blocGJacobi(M)
 
-    elseif formG == "LLDL"
-        G⁻¹ = lim_LDL(M)
+        elseif formG == "LLDL"
+            G⁻¹ = lim_LDL(M)
 
-    elseif formG == "I"
-        G⁻¹ = LinearOperator(Float64, size(M,1), size(M,1), true, true, v -> v) 
+        elseif formG == "I"
+            G⁻¹ = LinearOperator(Float64, n, n, true, true, v -> v) 
+        else
+            error("Cette forme de G n'est pas supportée")
+        end
+
+        #Construction du préconditionneur
+        opM = constrPrecond(G⁻¹,A,N)
     else
-        error("Cette forme de G n'est pas supportée")
+        #P = I si on ne veut pas de preconditionneur
+        opM = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
     end
-
-    #Construction du préconditionneur
-    opM = constrPrecond(G⁻¹,A,N)
 
     mat = [M A'; A -N]
 
     #Différentes méthodes de Krylov possibles
     if methodKrylov == "cgs"
-        x, stats = cgs(mat, b, rtol=0.0, atol=0.0, itmax=maxit,history=true)
-        x2, stats2 = cgs(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit,history=true)
+        x, stats = cgs(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit,history=true)
     elseif methodKrylov == "gmres"
-        x, stats = dqgmres(mat, b, rtol=0.0, atol=0.0, itmax=maxit,history=true)
-        x2, stats2 = dqgmres(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit,history=true)
+        x, stats = dqgmres(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit,history=true)
     else
         error("Cette méthode de Krylov n'est pas supportée")
     end
 
-    #nbiter = length(stats.residuals) - 1
-    #println("Convergence en $nbiter itérations sans préconditionneur.")
-    #nbiter2 = length(stats2.residuals) - 1
-    #println("Convergence en $nbiter2 itérations sans préconditionneur.")
-
-    #println("Residu du vecteur [x,y] du système par blocs sans préconditionneur: ", norm(mat*x-b))
-    #println("Residu du vecteur [x,y] du système par blocs avec préconditionneur: ", norm(mat*x2-b))
-
-    return x, stats, x2, stats2
+    return x, stats
 
 end
