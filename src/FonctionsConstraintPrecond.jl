@@ -1,7 +1,7 @@
 using LinearAlgebra
 using LinearOperators
 using Krylov
-using LimitedLDLFactorizations
+using LimitedLDLFactorizations,LDLFactorizations
 
 ## Fonctions qui créent différents types de G⁻¹ à partir de M
 function blocGJacobi(M::AbstractArray)
@@ -52,21 +52,30 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,metho
     m,n = size(A)
     
     if precond
-        #Construction de G⁻¹ du préconditionneur
+        #Construction de G⁻¹ et de G du préconditionneur
         if formG == "Diagonal"
             G⁻¹ = blocGJacobi(M)
+            G = Diagonal(M)
 
         elseif formG == "LLDL"
-            G⁻¹ = lim_LDL(M)
+            G⁻¹ = lim_LDL(M) #Probablement à retirer
 
         elseif formG == "I"
             G⁻¹ = LinearOperator(Float64, n, n, true, true, v -> v) 
+            G = G⁻¹
         else
             error("Cette forme de G n'est pas supportée")
         end
 
-        #Construction du préconditionneur
-        opM = constrPrecond(G⁻¹,A,N)
+        #Construction du préconditionneur (par inversion par bloc) 
+        #opM = constrPrecond(G⁻¹,A,N) #Probablement <a retirer
+
+        #Construction  du préconditionneur (par factorisation lldl)
+        P = [Matrix(G) A'; A -N]
+        #F = lldl(P,memory=10000)
+        F = ldl(P)
+        opM = LinearOperator(Float64, n+m, n+m, true, true, u -> F\u)
+
     else
         #P = I si on ne veut pas de preconditionneur
         opM = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
