@@ -1,4 +1,4 @@
-using SparseArrays
+using SparseArrays, MAT
 using Plots
 using LaTeXStrings
 include("FonctionsConstraintPrecond.jl")
@@ -12,13 +12,14 @@ M = sprand(120,120,1.0)
 M = M'*M #M = M'*M pour hermitien, mais pas nécessaire (pour gmres oui)
 N = N'*N;
 
-#A[end,:] = A[1,:]; #Matrice A pas de rang plein
+A[end,:] = A[1,:]; #Matrice A pas de rang plein
 
 m,n = size(A)
 mat = [M A'; A -N]
-#b = [rand(m);zeros(n)]
-b = [rand(m);rand(n)]
-#b = mat[:,1]
+D = [rand(m);zeros(n)]
+#D = [rand(m);rand(n)]
+#D = mat[:,1]
+
 
 ## Resolution avec un preconditionneur par contrainte
 kmax = 500
@@ -32,14 +33,14 @@ time3 = zeros(kmax)
 time4 = zeros(kmax)
 
 for k = 1:kmax
-    t1 = @elapsed x, stats = solvePrecond(M,A,N,b, "gmres", false, "I", k);
-    res1[k] = norm(b-mat*x)
+    t1 = @elapsed x, stats = solvePrecond(M,A,N,D, "gmres", false, "I", 0.0, 0.0, k);
+    res1[k] = norm(D-mat*x)
     time1[k] = t1
-    t2 = @elapsed x2, stats = solvePrecond(M,A,N,b, "gmres", true, "I", k);
-    res2[k] = norm(b-mat*x2)
+    t2 = @elapsed x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", 0.0, 0.0, k);
+    res2[k] = norm(D-mat*x2)
     time2[k] = t2
-    t3 = @elapsed x3, stats = solvePrecond(M,A,N,b, "gmres", true, "Diagonal", k);
-    res3[k] = norm(b-mat*x3)
+    t3 = @elapsed x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", 0.0, 0.0, k);
+    res3[k] = norm(D-mat*x3)
     time3[k] = t3
     #t4 = @elapsed x4, stats = solvePrecond(M,A,N,b, "gmres", true, "LLDL", k);
     #res4[k] = norm(b-mat*x4)

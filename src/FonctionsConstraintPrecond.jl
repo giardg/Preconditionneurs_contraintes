@@ -47,7 +47,7 @@ function constrPrecond(G⁻¹,A::AbstractArray,N::AbstractArray)
 end
 
 ## Fonction qui résout le systeme global avec un préconditionneur par contrainte et une méthode donnée en entrée
-function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,methodKrylov="cgs", precond = true, formG="Diagonal", maxit = 1000)
+function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,methodKrylov="cgs", precond = true, formG="Diagonal", rtol=0.0, atol=0.0, maxit = 1000)
 
     m,n = size(A)
     
@@ -85,9 +85,9 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,b,metho
 
     #Différentes méthodes de Krylov possibles
     if methodKrylov == "cgs"
-        x, stats = cgs(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit,history=true)
+        x, stats = cgs(mat, D, M = opM, rtol=rtol, atol=atol, itmax=maxit,history=true)
     elseif methodKrylov == "gmres"
-        x, stats = dqgmres(mat, b, M = opM, rtol=0.0, atol=0.0, itmax=maxit,history=true)
+        x, stats = dqgmres(mat, D, M = opM, rtol=atol, atol=atol, itmax=maxit,history=true)
     else
         error("Cette méthode de Krylov n'est pas supportée")
     end
