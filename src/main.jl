@@ -1,4 +1,4 @@
-using SparseArrays, MAT
+using SparseArrays, MAT, LinearAlgebra
 using Plots
 using LaTeXStrings
 include("FonctionsConstraintPrecond.jl")
@@ -22,7 +22,7 @@ D = [rand(m);zeros(n)]
 
 
 ## Resolution avec un preconditionneur par contrainte
-kmax = 500
+kmax = 100
 res1 = zeros(kmax)
 res2 = zeros(kmax)
 res3 = zeros(kmax)

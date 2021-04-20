@@ -1,4 +1,3 @@
-using LinearAlgebra
 using LinearOperators
 using Krylov
 using LimitedLDLFactorizations,LDLFactorizations
@@ -72,8 +71,8 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,metho
 
         #Construction  du préconditionneur (par factorisation lldl)
         P = [Matrix(G) A'; A -N]
-        #F = lldl(P,memory=10000)
-        F = ldl(P)
+        F = lldl(P,memory=10000)
+        #F = ldl(P)
         opM = LinearOperator(Float64, n+m, n+m, true, true, u -> F\u)
 
     else

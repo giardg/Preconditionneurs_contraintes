@@ -1,6 +1,4 @@
-using SparseArrays, MAT
-using Plots
-using LaTeXStrings
+using SparseArrays, MAT, LinearAlgebra
 include("FonctionsConstraintPrecond.jl")
 
 # Test sur Stokes-Collection
