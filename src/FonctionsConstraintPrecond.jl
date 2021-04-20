@@ -1,6 +1,6 @@
 using LinearOperators
 using Krylov
-using LimitedLDLFactorizations,LDLFactorizations
+using LimitedLDLFactorizations,LDLFactorizations, IncompleteLU, ILUZero
 
 ## Fonctions qui créent différents types de G⁻¹ à partir de M
 function blocGJacobi(M::AbstractArray)
@@ -46,7 +46,7 @@ function constrPrecond(G⁻¹,A::AbstractArray,N::AbstractArray)
 end
 
 ## Fonction qui résout le systeme global avec un préconditionneur par contrainte et une méthode donnée en entrée
-function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,methodKrylov="cgs", precond = true, formG="Diagonal", rtol=0.0, atol=0.0, maxit = 1000)
+function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,methodKrylov="cgs", precond = true, formG="Diagonal", precondGDC="G", rtol=0.0, atol=0.0, maxit = 1000)
 
     m,n = size(A)
     
@@ -70,23 +70,37 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,metho
         #opM = constrPrecond(G⁻¹,A,N) #Probablement <a retirer
 
         #Construction  du préconditionneur (par factorisation lldl)
-        P = [Matrix(G) A'; A -N]
-        F = lldl(P,memory=10000)
-        #F = ldl(P)
-        opM = LinearOperator(Float64, n+m, n+m, true, true, u -> F\u)
+        P = SparseMatrixCSC([Matrix(G) A'; A -N])
+
+        if precondGDC == "G"
+            F = lldl(P,memory=10000)
+            opM = LinearOperator(Float64, m+n, m+n, true, true, w -> F\w)
+            opN = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
+        elseif precondGDC == "D" 
+            F = lldl(P,memory=10000)
+            opN = LinearOperator(Float64, m+n, m+n, true, true, w -> F\w)
+            opM = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
+        elseif precondGDC=="C"
+            F = lu(P)
+            opM = LinearOperator(Float64, m+n, m+n, false, false, u -> F.L\u)
+            opN = LinearOperator(Float64, m+n, m+n, false, false, v -> F.U\v)
+        else
+            error("Le préconditionneur ne peut être appliqué qu'à gauche (G), droite (D) ou centré (C)")
+        end
 
     else
         #P = I si on ne veut pas de preconditionneur
         opM = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
+        opN = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
     end
 
     mat = [M A'; A -N]
 
     #Différentes méthodes de Krylov possibles
     if methodKrylov == "cgs"
-        x, stats = cgs(mat, D, M = opM, rtol=rtol, atol=atol, itmax=maxit,history=true)
+        x, stats = cgs(mat, D, M = opM, N = opN, rtol=rtol, atol=atol, itmax=maxit,history=true)
     elseif methodKrylov == "gmres"
-        x, stats = dqgmres(mat, D, M = opM, rtol=atol, atol=atol, itmax=maxit,history=true)
+        x, stats = dqgmres(mat, D, M = opM, N = opN, rtol=atol, atol=atol, itmax=maxit,history=true)
     else
         error("Cette méthode de Krylov n'est pas supportée")
     end

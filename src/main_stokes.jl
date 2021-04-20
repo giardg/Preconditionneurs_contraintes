@@ -38,13 +38,13 @@ for grid in keys(grids)
                 mat = [M A'; A -N]
                 D = [b; c]
 
-                x1, stats = solvePrecond(M,A,N,D, "gmres", false, "I", 1e-8, 1e-8, min(m,n));
+                x1, stats = solvePrecond(M,A,N,D, "gmres", false, "I", "G", 1e-8, 1e-8, min(m,n));
                 println(grid, " -- ", pb, " Sans préconditionneur Nombre d'itérations: ", length(stats.residuals)-1)
 
-                x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", 1e-8, 1e-8, min(m,n));
+                x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", "G", 1e-8, 1e-8, min(m,n));
                 println(grid, " -- ", pb, " G = I Nombre d'itérations: ", length(stats.residuals)-1)
 
-                x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", 1e-8, 1e-8, min(m,n));
+                x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", "G", 1e-8, 1e-8, min(m,n));
                 println(grid, " -- ", pb, " G = Diag(M) Nombre d'itérations: ", length(stats.residuals)-1)
             end
         end

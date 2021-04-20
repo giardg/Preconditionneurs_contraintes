@@ -12,17 +12,17 @@ M = sprand(120,120,1.0)
 M = M'*M #M = M'*M pour hermitien, mais pas nécessaire (pour gmres oui)
 N = N'*N;
 
-A[end,:] = A[1,:]; #Matrice A pas de rang plein
+#A[end,:] = A[1,:]; #Matrice A pas de rang plein
 
 m,n = size(A)
 mat = [M A'; A -N]
-D = [rand(m);zeros(n)]
+D = [rand(m);zeros(n)] 
 #D = [rand(m);rand(n)]
 #D = mat[:,1]
 
 
 ## Resolution avec un preconditionneur par contrainte
-kmax = 100
+kmax = 500
 res1 = zeros(kmax)
 res2 = zeros(kmax)
 res3 = zeros(kmax)
@@ -33,13 +33,13 @@ time3 = zeros(kmax)
 time4 = zeros(kmax)
 
 for k = 1:kmax
-    t1 = @elapsed x, stats = solvePrecond(M,A,N,D, "gmres", false, "I", 0.0, 0.0, k);
+    t1 = @elapsed x, stats = solvePrecond(M,A,N,D, "gmres", false, "I", "G", 0.0, 0.0, k);
     res1[k] = norm(D-mat*x)
     time1[k] = t1
-    t2 = @elapsed x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", 0.0, 0.0, k);
+    t2 = @elapsed x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", "G", 0.0, 0.0, k);
     res2[k] = norm(D-mat*x2)
     time2[k] = t2
-    t3 = @elapsed x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", 0.0, 0.0, k);
+    t3 = @elapsed x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", "G", 0.0, 0.0, k);
     res3[k] = norm(D-mat*x3)
     time3[k] = t3
     #t4 = @elapsed x4, stats = solvePrecond(M,A,N,b, "gmres", true, "LLDL", k);
