@@ -2,7 +2,7 @@ using LinearOperators
 using Krylov
 using LimitedLDLFactorizations,LDLFactorizations, IncompleteLU, ILUZero
 
-## Fonctions qui créent différents types de G⁻¹ à partir de M
+## Fonctions qui créent différents types de G⁻¹ à partir de M (Fonctions inutilisées)
 function blocGJacobi(M::AbstractArray)
 
     #Preconditionneur avec bloc G diagonal   
@@ -17,7 +17,7 @@ function lim_LDL(A)
     G⁻¹ =  LinearOperator(Float64, n, n, true, true, v -> F \ v) 
 end
 
-## Fonctions qui "inversent" un certain G
+## Fonctions qui "inversent" un certain G (Fonction inutilisée)
 function jacobi(A)
 
     # Inversion de G = diag(M)
@@ -30,7 +30,7 @@ function jacobi(A)
     return P⁻¹
 end
 
-## Fonction qui construit le préconditionneur à gauche ou à droite
+## Fonction qui construit le préconditionneur à gauche ou à droite (Fonction inutilisée)
 function constrPrecond(G⁻¹,A::AbstractArray,N::AbstractArray)
 
     #Calcul du complément de Schur et la méthodologie de son inversion
@@ -46,22 +46,20 @@ function constrPrecond(G⁻¹,A::AbstractArray,N::AbstractArray)
 end
 
 ## Fonction qui résout le systeme global avec un préconditionneur par contrainte et une méthode donnée en entrée
-function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,methodKrylov="cgs", precond = true, formG="Diagonal", precondGDC="G", rtol=0.0, atol=0.0, maxit = 1000)
+function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,methodKrylov="gmres", precond = true, formG="Diagonal", precondGDC="G", rtol=0.0, atol=0.0, maxit = 1000)
 
     m,n = size(A)
     
     if precond
         #Construction de G⁻¹ et de G du préconditionneur
         if formG == "Diagonal"
-            G⁻¹ = blocGJacobi(M)
             G = Diagonal(M)
 
-        elseif formG == "LLDL"
-            G⁻¹ = lim_LDL(M) #Probablement à retirer
+        elseif formG == "Symmetric"
+            G = (1/2).*(M+M') #Partie symétrique de M
 
         elseif formG == "I"
-            G⁻¹ = LinearOperator(Float64, n, n, true, true, v -> v) 
-            G = G⁻¹
+            G = LinearOperator(Float64, n, n, true, true, v -> v) 
         else
             error("Cette forme de G n'est pas supportée")
         end
@@ -70,14 +68,14 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,metho
         #opM = constrPrecond(G⁻¹,A,N) #Probablement <a retirer
 
         #Construction  du préconditionneur (par factorisation lldl)
-        P = SparseMatrixCSC([Matrix(G) A'; A -N])
+        P = ([Matrix(G) A'; A -N])
 
         if precondGDC == "G"
-            F = lldl(P,memory=10000)
+            F = lldl(P,memory=1000)
             opM = LinearOperator(Float64, m+n, m+n, true, true, w -> F\w)
             opN = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
         elseif precondGDC == "D" 
-            F = lldl(P,memory=10000)
+            F = lldl(P,memory=1000)
             opN = LinearOperator(Float64, m+n, m+n, true, true, w -> F\w)
             opM = LinearOperator(Float64, m+n, m+n, true, true, v -> v) 
         elseif precondGDC=="C"
@@ -101,6 +99,10 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,metho
         x, stats = cgs(mat, D, M = opM, N = opN, rtol=rtol, atol=atol, itmax=maxit,history=true)
     elseif methodKrylov == "gmres"
         x, stats = dqgmres(mat, D, M = opM, N = opN, rtol=atol, atol=atol, itmax=maxit,history=true)
+    elseif methodKrylov == "bicgstab"
+        x, stats = bicgstab(mat, D, M = opM, N = opN, rtol=rtol, atol=atol, itmax=maxit,history=true)
+    elseif methodKrylov == "diom"
+        x, stats = diom(mat, D, M = opM, N = opN, rtol=rtol, atol=atol, itmax=maxit,memory=1000,history=true)
     else
         error("Cette méthode de Krylov n'est pas supportée")
     end
