@@ -16,13 +16,13 @@ N = N'*N;
 
 m,n = size(A)
 mat = [M A'; A -N]
-D = [rand(n);zeros(m)] 
-#D = [rand(n);rand(m)]
+#D = [rand(n);zeros(m)] 
+D = [rand(n);rand(m)]
 #D = mat[:,1]
 
 
 ## Resolution avec un preconditionneur par contrainte
-kmax = 100
+kmax = 500
 res1 = zeros(kmax)
 res2 = zeros(kmax)
 res3 = zeros(kmax)
@@ -33,27 +33,27 @@ time3 = zeros(kmax)
 time4 = zeros(kmax)
 
 for k = 1:kmax
-    t1 = @elapsed x, stats = solvePrecond(M,A,N,D, "gmres", false, "I", "G", 0.0, 0.0, k);
+    t1 = @elapsed x, stats = solvePrecond(M,A,N,D, "gmres", false, "I", "C", 0.0, 0.0, k);
     res1[k] = norm(D-mat*x)
     time1[k] = t1
-    t2 = @elapsed x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", "G", 0.0, 0.0, k);
+    t2 = @elapsed x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", "C", 0.0, 0.0, k);
     res2[k] = norm(D-mat*x2)
     time2[k] = t2
-    t3 = @elapsed x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", "G", 0.0, 0.0, k);
+    t3 = @elapsed x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", "C", 0.0, 0.0, k);
     res3[k] = norm(D-mat*x3)
     time3[k] = t3
-    t4 = @elapsed x4, stats = solvePrecond(M,A,N,D, "gmres", true, "Symmetric", "G", 0.0, 0.0, k);
+    t4 = @elapsed x4, stats = solvePrecond(M,A,N,D, "gmres", true, "Symmetric", "C", 0.0, 0.0, k);
     res4[k] = norm(D-mat*x4)
     time4[k] = t4
 end
 
 ## Affichage des résultats
-plot_ref1=plot(1:kmax, res1, yaxis=:log10, xlabel=L"k", color=1, ylabel=L"\|r_k\|", label="Sans préconditionneur",legend=:best, fmt = :png)
+plot_ref1=plot(1:kmax, res1, yaxis=:log10, xlabel=L"k", color=1, ylabel=L"||r_k||", label="Sans préconditionneur",legend=:best, fmt = :png)
 plot_ref1=plot!(1:kmax, res2, color=2, label=L"G = I")
-plot_ref1=plot!(1:kmax, res3, color=3, label="LG = Diag(M)")
+plot_ref1=plot!(1:kmax, res3, color=3, label=L"G = Diag(M)")
 plot_ref1=plot!(1:kmax, res4, color=4, label=L"G = \frac{1}{2}(M+M^*)")
 
-#savefig(plot_ref1,"C:\\Users\\Gregory.Giard\\Maitrise\\Session 2\\Algebre lineaire numerique appliquee\\Projet\\Preconditionneurs_contraintes\\cgs_rk_nonHerm")
+savefig(plot_ref1,"C:\\Users\\Gregory.Giard\\Maitrise\\Session 2\\Algebre lineaire numerique appliquee\\Projet\\Preconditionneurs_contraintes\\gmres_centre_rk")
 
 #plot_ref2=plot(1:kmax, time1, yaxis=:log10, xlabel=L"k", color=1, ylabel="Temps (s)", label="Sans préconditionneur",legend=:bottomright, fmt = :png)
 #plot_ref2=plot!(1:kmax, time2, color=2, label="G = I")
