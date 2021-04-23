@@ -1,4 +1,5 @@
 using SparseArrays, MAT, LinearAlgebra
+
 include("FonctionsConstraintPrecond.jl")
 
 # Test sur Stokes-Collection
@@ -34,18 +35,20 @@ for grid in keys(grids)
                 close(file)
                 println("✔")
 
+                println(norm(M-M'))
+
                 m,n = size(A)
                 mat = [M A'; A -N]
                 D = [b; c]
 
-                x1, stats = solvePrecond(M,A,N,D, "gmres", false, "I", "G", 1e-8, 1e-8, min(m,n));
-                println(grid, " -- ", pb, " Sans préconditionneur Nombre d'itérations: ", length(stats.residuals)-1)
+                t1 = @elapsed x1, stats = solvePrecond(M,A,N,D, "gmres", false, "I", "G", 1e-8, 1e-8, min(m,n));
+                println(grid, " -- ", pb, " Sans préconditionneur Nombre d'itérations: ", length(stats.residuals)-1, " Temps: ", t1)
 
-                x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", "G", 1e-8, 1e-8, min(m,n));
-                println(grid, " -- ", pb, " G = I Nombre d'itérations: ", length(stats.residuals)-1)
+                t2 = @elapsed x2, stats = solvePrecond(M,A,N,D, "gmres", true, "I", "G", 1e-8, 1e-8, min(m,n));
+                println(grid, " -- ", pb, " G = I Nombre d'itérations: ", length(stats.residuals)-1, " Temps: ", t2)
 
-                x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", "G", 1e-8, 1e-8, min(m,n));
-                println(grid, " -- ", pb, " G = Diag(M) Nombre d'itérations: ", length(stats.residuals)-1)
+                t3 = @elapsed x3, stats = solvePrecond(M,A,N,D, "gmres", true, "Diagonal", "G", 1e-8, 1e-8, min(m,n));
+                println(grid, " -- ", pb, " G = Diag(M) Nombre d'itérations: ", length(stats.residuals)-1, " Temps: ", t3)
             end
         end
     end

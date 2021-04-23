@@ -53,7 +53,7 @@ function solvePrecond(M::AbstractArray,A::AbstractArray,N::AbstractArray,D,metho
     if precond
         #Construction de G⁻¹ et de G du préconditionneur
         if formG == "Diagonal"
-            G = Diagonal(M)
+            G = (Diagonal(M))
 
         elseif formG == "Symmetric"
             G = (1/2).*(M+M') #Partie symétrique de M
